@@ -2262,7 +2262,7 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
     // event whitelistMultiAdded(address[] members);
     // event whitelistMultiRemoved(address[] members);
     
-    constructor() ERC721("Name Tag Test3", "NTT") {}
+    constructor() ERC721("Name Tag Testt", "NTT") {}
 
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
@@ -2324,7 +2324,7 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
         return _mintedAmount[member];
     }
 
-    function validate(string memory name) internal pure returns (bool, string memory) {
+    function validate(string memory name) public pure returns (bool, string memory) {
         bytes memory b = bytes(name);
         if (b.length == 0) return (false, '');
         if (b.length > 36) return (false, '');
