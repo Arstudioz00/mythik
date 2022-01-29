@@ -2228,13 +2228,14 @@ abstract contract Ownable is Context {
     }
 }
 
-contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
+contract Mythik is ERC721, Ownable, StringUpper, DenyList {
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
+    // using NameTagLibrary for uint8;
 
-    uint256 public mintPrice = 30000000000000000; // 0.030 ETH
+    // uint256 public mintPrice = 30000000000000000; // 0.030 ETH
 
-    uint256 public walletLimit = 1;
+    uint256 public walletLimit = 20;
 
     uint256 public MAX_SUPPLY = 10000;
 
@@ -2250,6 +2251,11 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
 
     mapping(uint256 => string) tokenNames;
     mapping(string => uint256) names;
+    // mapping(uint256 => string) ipfs_cid;
+    mapping(uint256 => uint256) character_price;
+    mapping(uint256 => uint256) character_supply;
+
+    mapping(uint256 => uint256) character_minted;
 
     event withdrawSuccessed();
     // event whitelistAdded(address newmember);
@@ -2262,7 +2268,25 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
     // event whitelistMultiAdded(address[] members);
     // event whitelistMultiRemoved(address[] members);
     
-    constructor() ERC721("Name Tag Testt", "NTT") {}
+    constructor() ERC721("Mythik1", "MT") {
+        character_price[0] = 10000000000000000;
+        character_price[1] = 20000000000000000;
+        character_price[2] = 30000000000000000;
+        character_price[3] = 10000000000000000;
+        character_price[4] = 20000000000000000;
+        character_price[5] = 30000000000000000;
+        character_price[6] = 10000000000000000;
+        character_price[7] = 20000000000000000;
+
+        character_supply[0] = 2450;
+        character_supply[1] = 50;
+        character_supply[2] = 250;
+        character_supply[3] = 2450;
+        character_supply[4] = 500;
+        character_supply[5] = 500;
+        character_supply[6] = 500;
+        character_supply[7] = 500;
+    }
 
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
@@ -2318,7 +2342,27 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
     // function isWhiteMember (address member) public view returns (bool) {
     //     return whitelist.contains(member);
     // }
+
+    function setCharacterPrice(uint256 id, uint256 price) public onlyOwner{
+        character_price[id] = price;
+    }
+
+    function setCharacterSupply(uint256 id, uint256 supply) public onlyOwner{
+        character_supply[id] = supply;
+    }
+
+    function getCharacterPrice(uint256 id) public view returns(uint256) {
+        return character_price[id];
+    }
+
+    function getCharacterSupply(uint256 id) public view returns(uint256) {
+        return character_supply[id];
+    }
     
+    function getCharacterMinted(uint256 id) public view returns(uint256) {
+        return character_minted[id];
+    }
+
     function getMintedAmont (address member) public view returns (uint256) {
         // require(whitelist.contains(member), "Sender is not a whitelist member");
         return _mintedAmount[member];
@@ -2356,17 +2400,60 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
         return (true, string(bUpperName));
     }
 
-    function Mint(string memory _name, string memory cid) public payable {
+    function Mint(string memory _name, string memory cid, uint256 characterId) public payable {
         uint256 supply = totalSupply();
+
+        require(character_price[characterId] > 0, "character is not exsited");
 
         require(saleIsActive, "Sale must be active to mint");     
         // require(whitelist.contains(msg.sender), "Sender is not a whitelist member");
         require(_mintedAmount[msg.sender] < walletLimit, "Exceeds Personal Walllet Limits");
         require(totalSupply() < MAX_SUPPLY, "Exceeds max supply of contract");
-        require(msg.value >= mintPrice, "The price is not correct");
+        require(msg.value >= character_price[characterId], "The price is not correct");
+        require(character_minted[characterId] < character_supply[characterId], "The character amount is reached limit");
 
         _safeMint(msg.sender, supply + 1);
         _setTokenURI(supply + 1, cid);
+        _mintedAmount[msg.sender] = _mintedAmount[msg.sender].add(1);
+        character_minted[characterId] = character_minted[characterId] + 1;
+
+        bool status;
+        string memory upperName;
+        (status, upperName) = validate(_name);
+
+        require((status == true && names[upperName] == 0 && !denyList[upperName]), "name is invalid" );
+
+        tokenNames[supply + 1] = _name;
+        names[upperName] = supply + 1;
+        // ipfs_cid[supply + 1] = cid;
+
+    }
+
+    function changeTokenName(uint256 tokenId, string memory _name, string memory cid) public onlyOwner {
+        
+        bool status;
+        string memory upperName;
+        (status, upperName) = validate(_name);
+
+        require((status == true && names[upperName] == 0 && !denyList[upperName]), "name is invalid" );
+
+        _setTokenURI(tokenId, cid);
+        
+        tokenNames[tokenId] = _name;
+        names[upperName] = tokenId;
+    }
+    
+    function ownerMint(string memory _name, string memory cid, uint256 characterId) public onlyOwner{
+        uint256 supply = totalSupply();
+
+        require(saleIsActive, "Sale must be active to mint");     
+        require(totalSupply() < MAX_SUPPLY, "Exceeds max supply of contract");
+        require(character_minted[characterId] < character_supply[characterId], "The character amount is reached limit");
+
+        _safeMint(msg.sender, supply + 1);
+        _setTokenURI(supply + 1, cid);
+
+        character_minted[characterId] = character_minted[characterId] + 1;
         _mintedAmount[msg.sender] = _mintedAmount[msg.sender].add(1);
 
         bool status;
@@ -2377,26 +2464,7 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
 
         tokenNames[supply + 1] = _name;
         names[upperName] = supply + 1;
-
-    }
-    
-    function ownerMint(string memory _name, string memory cid) public onlyOwner{
-        uint256 supply = totalSupply();
-
-        require(saleIsActive, "Sale must be active to mint");     
-        require(totalSupply() < MAX_SUPPLY, "Exceeds max supply of contract");
-
-        _safeMint(msg.sender, supply + 1);
-        _setTokenURI(supply + 1, cid);
-
-        bool status;
-        string memory upperName;
-        (status, upperName) = validate(_name);
-
-        require((status == true && names[upperName] == 0 && !denyList[upperName]), "name is invalid" );
-
-        tokenNames[supply + 1] = _name;
-        names[upperName] = supply + 1;
+        // ipfs_cid[supply + 1] = cid;
     }
 
     function setBaseURI(string memory baseURI) public onlyOwner {
@@ -2428,10 +2496,10 @@ contract NameTageTest is ERC721, Ownable, StringUpper, DenyList {
         }
     }
 
-    function setmintPrice(uint256 newPrice) public onlyOwner {
-        mintPrice = newPrice;
-        emit mintPriceChanged(mintPrice);
-    }
+    // function setmintPrice(uint256 newPrice) public onlyOwner {
+    //     mintPrice = newPrice;
+    //     emit mintPriceChanged(mintPrice);
+    // }
 
     function setMaxSupply(uint256 amount) public onlyOwner {
         require(amount < ~uint256(0), "Exceeds numberic limts");
