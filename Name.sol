@@ -2269,6 +2269,16 @@ contract Mythik is ERC721, Ownable, StringUpper, DenyList {
     // event whitelistMultiRemoved(address[] members);
     
     constructor() ERC721("Mythik", "MT") {
+<<<<<<< HEAD
+        character_price[0] = 00000000000000000;
+        character_price[1] = 00000000000000000;
+        character_price[2] = 00000000000000000;
+        character_price[3] = 00000000000000000;
+        character_price[4] = 00000000000000000;
+        character_price[5] = 00000000000000000;
+        character_price[6] = 00000000000000000;
+        character_price[7] = 00000000000000000;
+=======
         character_price[0] = 10000000000000000;
         character_price[1] = 20000000000000000;
         character_price[2] = 30000000000000000;
@@ -2277,6 +2287,7 @@ contract Mythik is ERC721, Ownable, StringUpper, DenyList {
         character_price[5] = 30000000000000000;
         character_price[6] = 10000000000000000;
         character_price[7] = 20000000000000000;
+>>>>>>> f3658a74bef52596de50d5476f2abb0bb6784ad3
 
         character_supply[0] = 2450;
         character_supply[1] = 50;
